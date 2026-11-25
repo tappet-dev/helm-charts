@@ -2,6 +2,7 @@
 
 ```sh
 helm repo add tappet https://charts.tappet.dev
+# or: helm install tappet oci://ghcr.io/tappet-dev/charts/tappet -n tappet --create-namespace
 helm install tappet tappet/tappet --namespace tappet --create-namespace \
   --set publicUrl=https://tappet.example.com
 ```

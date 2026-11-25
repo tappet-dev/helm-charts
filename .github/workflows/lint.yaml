@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: helm/chart-testing-action@v2.6.1
-      - run: ct lint --target-branch main --all --validate-maintainers=false
+      - run: ct lint --target-branch main --all --validate-maintainers=false --lint-conf lintconf.yaml
       - run: |
           helm template t charts/tappet > /dev/null
           helm template t charts/tappet --set database.url=postgres://u:p@db/t --set worker.enabled=true --set server.replicas=2 > /dev/null

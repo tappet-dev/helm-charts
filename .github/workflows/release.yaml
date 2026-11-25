@@ -17,14 +17,15 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       - uses: azure/setup-helm@v4
-      # Classic Helm repository: tarballs as GitHub release assets, index.yaml on gh-pages,
-      # served at https://charts.tappet.dev (Cloudflare Pages redirects index.yaml to gh-pages).
+      # Classic Helm repository: tarballs as GitHub release assets, index.yaml on the `index` branch,
+      # served at https://charts.tappet.dev (Cloudflare Pages redirects index.yaml to the index branch).
       - uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           skip_existing: true
           charts_repo_url: https://charts.tappet.dev
+          pages_branch: index
       # OCI: oci://ghcr.io/tappet-dev/charts/<chart>
       - name: Push charts to GHCR (OCI)
         run: |

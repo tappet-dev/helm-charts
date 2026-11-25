@@ -14,5 +14,5 @@ helm install tappet oci://ghcr.io/tappet-dev/charts/tappet -n tappet --create-na
 | [tappet](charts/tappet) | Tappet workflow engine (single node or HA) |
 
 Charts are released automatically when `charts/**` changes on `main`: packaged as GitHub release
-assets with the index on the `gh-pages` branch (served via https://charts.tappet.dev), and pushed to
+assets with the index on the `index` branch (served via https://charts.tappet.dev), and pushed to
 `oci://ghcr.io/tappet-dev/charts`. Licensed Apache-2.0.
