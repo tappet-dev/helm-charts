@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  pages: write
+  packages: write
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -17,8 +17,24 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
       - uses: azure/setup-helm@v4
+      # Classic Helm repository: tarballs as GitHub release assets, index.yaml on gh-pages,
+      # served at https://charts.tappet.dev (Cloudflare Pages redirects index.yaml to gh-pages).
       - uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           skip_existing: true
+          charts_repo_url: https://charts.tappet.dev
+      # OCI: oci://ghcr.io/tappet-dev/charts/<chart>
+      - name: Push charts to GHCR (OCI)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+          mkdir -p .oci
+          for c in charts/*/; do
+            name=$(yq -r .name "$c/Chart.yaml"); ver=$(yq -r .version "$c/Chart.yaml")
+            if helm show chart "oci://ghcr.io/tappet-dev/charts/$name" --version "$ver" >/dev/null 2>&1; then
+              echo "$name $ver already in GHCR"; continue
+            fi
+            helm package "$c" -d .oci
+            helm push ".oci/$name-$ver.tgz" oci://ghcr.io/tappet-dev/charts
+          done
