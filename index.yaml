@@ -1,2 +1,29 @@
 apiVersion: v1
-entries: {}
+entries:
+  tappet:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: 0.1.0
+    created: "2026-11-25T18:55:00.50103365Z"
+    description: Single-binary workflow automation engine (runs n8n-exported workflows)
+    digest: 87d0777036aaf9eb5a986be2d3eef8da750d5538ed71d806a855ea463937f3d3
+    home: https://tappet.dev
+    icon: https://tappet.dev/logo.svg
+    keywords:
+    - workflow
+    - automation
+    - n8n
+    - ai-agents
+    - mcp
+    maintainers:
+    - name: Tappet Authors
+      url: https://github.com/tappet-dev
+    name: tappet
+    sources:
+    - https://github.com/tappet-dev/tappet
+    type: application
+    urls:
+    - https://github.com/tappet-dev/helm-charts/releases/download/tappet-0.1.0/tappet-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-11-25T18:55:00.501037914Z"
