@@ -1,0 +1,74 @@
+{{- if and (gt (int .Values.server.replicas) 1) (not (include "tappet.ha" .)) }}
+{{- fail "server.replicas > 1 requires database.url (Postgres); SQLite supports a single replica" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tappet.fullname" . }}
+  labels: {{- include "tappet.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+spec:
+  replicas: {{ .Values.server.replicas }}
+  {{- if not (include "tappet.ha" .) }}
+  strategy: { type: Recreate }
+  {{- end }}
+  selector:
+    matchLabels: {{- include "tappet.selector" . | nindent 6 }}
+      app.kubernetes.io/component: server
+  template:
+    metadata:
+      labels: {{- include "tappet.selector" . | nindent 8 }}
+        app.kubernetes.io/component: server
+        {{- with .Values.podLabels }}{{ toYaml . | nindent 8 }}{{ end }}
+      annotations:
+        checksum/env: {{ toJson .Values.env | sha256sum }}
+        {{- with .Values.podAnnotations }}{{ toYaml . | nindent 8 }}{{ end }}
+    spec:
+      serviceAccountName: {{ include "tappet.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: tappet
+          image: {{ include "tappet.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["serve", "--role", {{ if .Values.worker.enabled }}"api"{{ else }}"all"{{ end }}]
+          env: {{- include "tappet.env" . | nindent 12 }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.port }}
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          resources: {{- toYaml .Values.server.resources | nindent 12 }}
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: data
+          {{- if and .Values.persistence.enabled (not (include "tappet.ha" .)) }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "tappet.fullname" .) }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.server.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}

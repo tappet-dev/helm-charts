@@ -1,0 +1,103 @@
+# -- Image
+image:
+  repository: ghcr.io/tappet-dev/tappet
+  tag: ""            # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# -- Public URL users and OAuth providers reach Tappet at (required for webhooks/OAuth)
+publicUrl: ""
+
+# -- Database. Empty = embedded SQLite on the persistent volume (single replica).
+# Set to a postgres:// URL (or existingSecret) to enable HA mode with separate workers.
+database:
+  url: ""
+  existingSecret: ""     # secret with key DATABASE_URL
+  existingSecretKey: DATABASE_URL
+
+# -- Credential encryption key (32 bytes base64). Generated once and kept if empty.
+encryptionKey:
+  value: ""
+  existingSecret: ""
+  existingSecretKey: ENCRYPTION_KEY
+
+# -- Extra environment (see docs/configuration.md for every TAPPET_* variable)
+env:
+  TAPPET_EGRESS_POLICY: local
+  TAPPET_LOG_FORMAT: json
+extraEnvFrom: []
+
+server:
+  replicas: 1          # >1 requires database.url (Postgres)
+  port: 5678
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { memory: 1Gi }
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+worker:
+  # Separate queue workers; only used with Postgres.
+  enabled: false
+  replicas: 2
+  concurrency: 64
+  resources:
+    requests: { cpu: 200m, memory: 256Mi }
+    limits: { memory: 2Gi }
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 10Gi
+  accessModes: [ReadWriteOnce]
+  existingClaim: ""
+
+service:
+  type: ClusterIP
+  port: 5678
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []            # [{ host: tappet.example.com, paths: ["/"] }]
+  tls: []
+
+# -- Gateway API HTTPRoute
+httpRoute:
+  enabled: false
+  parentRefs: []       # [{ name: my-gateway, namespace: gateway-ns }]
+  hostnames: []
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile: { type: RuntimeDefault }
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: [ALL] }
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podAnnotations: {}
+podLabels: {}

@@ -1,0 +1,20 @@
+name: Lint and test charts
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: azure/setup-helm@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: helm/chart-testing-action@v2.6.1
+      - run: ct lint --target-branch main --all --validate-maintainers=false
+      - run: |
+          helm template t charts/tappet > /dev/null
+          helm template t charts/tappet --set database.url=postgres://u:p@db/t --set worker.enabled=true --set server.replicas=2 > /dev/null
+          ! helm template t charts/tappet --set server.replicas=2 > /dev/null 2>&1

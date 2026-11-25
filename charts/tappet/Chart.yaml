@@ -1,0 +1,15 @@
+apiVersion: v2
+name: tappet
+description: Single-binary workflow automation engine (runs n8n-exported workflows)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://tappet.dev
+icon: https://tappet.dev/logo.svg
+sources: [https://github.com/tappet-dev/tappet]
+keywords: [workflow, automation, n8n, ai-agents, mcp]
+annotations:
+  artifacthub.io/license: Apache-2.0
+maintainers:
+  - name: Tappet Authors
+    url: https://github.com/tappet-dev

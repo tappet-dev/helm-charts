@@ -1,0 +1,12 @@
+Tappet {{ .Chart.AppVersion }} is deploying.
+
+{{- if .Values.publicUrl }}
+Open {{ .Values.publicUrl }} and create the owner account.
+{{- else }}
+Port-forward to try it:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "tappet.fullname" . }} {{ .Values.service.port }}
+  open http://localhost:{{ .Values.service.port }}
+Set publicUrl for webhooks and OAuth to work.
+{{- end }}
+
+Mode: {{ if include "tappet.ha" . }}HA (Postgres{{ if .Values.worker.enabled }}, {{ .Values.worker.replicas }} workers{{ end }}){{ else }}single node (SQLite on PVC){{ end }}

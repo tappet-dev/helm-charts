@@ -1,0 +1,57 @@
+{{- if .Values.worker.enabled }}
+{{- if not (include "tappet.ha" .) }}{{ fail "worker.enabled requires database.url (Postgres)" }}{{ end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tappet.fullname" . }}-worker
+  labels: {{- include "tappet.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicas }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "tappet.selector" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels: {{- include "tappet.selector" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      serviceAccountName: {{ include "tappet.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: worker
+          image: {{ include "tappet.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["worker", "--concurrency", {{ .Values.worker.concurrency | quote }}]
+          env: {{- include "tappet.env" . | nindent 12 }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          resources: {{- toYaml .Values.worker.resources | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: data, mountPath: /data }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: data, emptyDir: {} }
+---
+{{- if .Values.worker.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "tappet.fullname" . }}-worker
+  labels: {{- include "tappet.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: {{ include "tappet.fullname" . }}-worker }
+  minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: {{ .Values.worker.autoscaling.targetCPUUtilizationPercentage }} }
+{{- end }}
+{{- end }}
