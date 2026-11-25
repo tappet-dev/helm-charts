@@ -25,6 +25,9 @@ spec:
         {{- with .Values.podAnnotations }}{{ toYaml . | nindent 8 }}{{ end }}
     spec:
       serviceAccountName: {{ include "tappet.serviceAccountName" . }}
+      # Kubernetes service links would inject TAPPET_PORT=tcp://... for a Service named
+      # "tappet", clashing with Tappet's own TAPPET_* configuration.
+      enableServiceLinks: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}

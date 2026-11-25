@@ -23,6 +23,7 @@ encryptionKey:
 
 # -- Extra environment (see docs/configuration.md for every TAPPET_* variable)
 env:
+  TAPPET_HOST: 0.0.0.0
   TAPPET_EGRESS_POLICY: local
   TAPPET_LOG_FORMAT: json
 extraEnvFrom: []

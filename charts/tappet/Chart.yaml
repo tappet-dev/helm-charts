@@ -2,7 +2,7 @@ apiVersion: v2
 name: tappet
 description: Single-binary workflow automation engine (runs n8n-exported workflows)
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: "0.1.0"
 home: https://tappet.dev
 icon: https://tappet.dev/logo.svg
